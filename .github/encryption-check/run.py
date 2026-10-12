@@ -3,7 +3,6 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-import urllib.request
 import zipfile
 
 
@@ -13,9 +12,10 @@ work = repo / ".encryption-check"
 work.mkdir(exist_ok=True)
 platform = "macos.universal" if sys.platform == "darwin" else "linux.x86_64"
 archive = work / "godot.zip"
-urllib.request.urlretrieve(
-    f"https://github.com/godotengine/godot/releases/download/4.5-stable/Godot_v4.5-stable_{platform}.zip",
-    archive,
+subprocess.run(
+    ["curl", "--fail", "--location", "--retry", "3", "--output", str(archive),
+     f"https://github.com/godotengine/godot/releases/download/4.5-stable/Godot_v4.5-stable_{platform}.zip"],
+    check=True,
 )
 with zipfile.ZipFile(archive) as package:
     package.extractall(work)
@@ -63,7 +63,7 @@ def run(name, arguments, env=None):
         trace = subprocess.run(
             ["lldb", "--batch", "-o", "settings set target.env-vars "
              + " ".join(f"{key}={env[key]}" for key in [injection, "GDPATCH_ROOT_DIRECTORY"]),
-             "-o", "run", "-k", "thread backtrace all", "--",
+             "-o", "run", "-k", "thread backtrace all -c 30", "--",
              str(godot), "--headless", *arguments],
             cwd=work, capture_output=True, text=True, timeout=90,
         )
