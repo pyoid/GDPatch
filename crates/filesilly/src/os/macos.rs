@@ -50,14 +50,14 @@ unsafe extern "system" fn interposed_open_nocancel(
         OsStr::from_bytes(str.to_bytes())
     };
     let path: PathBuf = OsString::from(path).into();
-    let path = path.canonicalize().unwrap_or(path);
-
-    let _entered = trace_span!("open", ?path).entered();
-
     let handle_store = HANDLE_STORE.lock();
     let handle = match handle_store.try_borrow_mut() {
         Err(_) => None,
-        Ok(mut handle_store) => Some(handle_store.create(&path)),
+        Ok(mut handle_store) => {
+            let path = path.canonicalize().unwrap_or(path);
+            let _entered = trace_span!("open", ?path).entered();
+            Some(handle_store.create(&path))
+        }
     };
     drop(handle_store);
 
