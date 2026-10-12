@@ -59,6 +59,16 @@ def run(name, arguments, env=None):
     output = result.stdout + result.stderr
     (work / (name + ".log")).write_text(output)
     print(output, flush=True)
+    if result.returncode < 0 and sys.platform == "darwin":
+        trace = subprocess.run(
+            ["lldb", "--batch", "-o", "settings set target.env-vars "
+             + " ".join(f"{key}={env[key]}" for key in [injection, "GDPATCH_ROOT_DIRECTORY"]),
+             "-o", "run", "-k", "thread backtrace all", "--",
+             str(godot), "--headless", *arguments],
+            cwd=work, capture_output=True, text=True, timeout=90,
+        )
+        (work / (name + "-backtrace.log")).write_text(trace.stdout + trace.stderr)
+        print(trace.stdout + trace.stderr, flush=True)
     result.check_returncode()
     return output
 

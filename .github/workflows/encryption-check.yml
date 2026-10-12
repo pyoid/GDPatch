@@ -38,3 +38,4 @@ jobs:
         with:
           name: encryption-check-${{ matrix.os }}
           path: .encryption-check/*.log
+          include-hidden-files: true
