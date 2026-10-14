@@ -2,8 +2,8 @@ name: Build
 on:
   push:
     branches:
-      - main
-  pull_request:
+      - pyoid/encryption-builds
+  workflow_dispatch:
 
 jobs:
   build:
@@ -37,6 +37,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: 04a330637af3f3635c0af792bda8adde82c0d462
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@nightly
@@ -51,7 +53,7 @@ jobs:
         run: sudo apt-get install --yes --no-install-recommends gcc-mingw-w64-x86-64-win32
 
       - name: Build
-        run: cargo build --package gdpatch-loader --release --target ${{ matrix.target }}
+        run: cargo build --locked --package gdpatch-loader --release --target ${{ matrix.target }}
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
